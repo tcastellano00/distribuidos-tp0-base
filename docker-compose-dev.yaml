@@ -9,6 +9,8 @@ services:
       - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net
+    volumes:
+      - ./server/config.ini:/config.ini
 
   
   client1:
@@ -22,6 +24,8 @@ services:
         - testing_net
     depends_on:
         - server
+    volumes:
+        - ./client/config.yaml:/config.yaml
 
   client2:
     container_name: client2
@@ -34,6 +38,8 @@ services:
         - testing_net
     depends_on:
         - server
+    volumes:
+        - ./client/config.yaml:/config.yaml
 
   client3:
     container_name: client3
@@ -46,6 +52,8 @@ services:
         - testing_net
     depends_on:
         - server
+    volumes:
+        - ./client/config.yaml:/config.yaml
 
   client4:
     container_name: client4
@@ -58,6 +66,8 @@ services:
         - testing_net
     depends_on:
         - server
+    volumes:
+        - ./client/config.yaml:/config.yaml
 
 
 networks:

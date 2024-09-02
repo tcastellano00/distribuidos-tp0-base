@@ -13,6 +13,8 @@ def get_client_container_definition(client_id):
         - testing_net
     depends_on:
         - server
+    volumes:
+        - ./client/config.yaml:/config.yaml
 """
 
 
