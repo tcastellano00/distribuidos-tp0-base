@@ -1,14 +1,12 @@
 package common
 
 import (
-	"bufio"
-	"fmt"
-	"net"
-	"time"
-	"github.com/op/go-logging"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("log")
@@ -24,7 +22,7 @@ type ClientConfig struct {
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
-	conn   net.Conn
+	conn   *Protocol
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -43,7 +41,8 @@ func NewClient(config ClientConfig) *Client {
 // failure, error is printed in stdout/stderr and exit 1
 // is returned
 func (c *Client) createClientSocket() error {
-	conn, err := net.Dial("tcp", c.config.ServerAddress)
+	conn, err := CreateConnection(c.config.ServerAddress)
+
 	if err != nil {
 		log.Criticalf(
 			"action: connect | result: fail | client_id: %v | error: %v",
@@ -51,6 +50,7 @@ func (c *Client) createClientSocket() error {
 			err,
 		)
 	}
+
 	c.conn = conn
 	return nil
 }
@@ -63,27 +63,40 @@ func (c *Client) StartClientLoop() {
 		// Create the connection the server in every loop iteration. Send an
 		c.createClientSocket()
 
-		// TODO: Modify the send to avoid short-write
-		fmt.Fprintf(
-			c.conn,
-			"[CLIENT %v] Message N°%v\n",
+		clientMessage := CreateClientMessage(
 			c.config.ID,
-			msgID,
+			os.Getenv("NOMBRE"),
+			os.Getenv("APELLIDO"),
+			os.Getenv("DOCUMENTO"),
+			os.Getenv("NACIMIENTO"),
+			os.Getenv("NUMERO"),
 		)
-		msg, err := bufio.NewReader(c.conn).ReadString('\n')
-		c.conn.Close()
+
+		err := c.conn.Send(*clientMessage)
 
 		if err != nil {
-			log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
+			log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v",
 				c.config.ID,
 				err,
 			)
 			return
 		}
 
-		log.Infof("action: receive_message | result: success | client_id: %v | msg: %v",
-			c.config.ID,
-			msg,
+		msg, err := c.conn.ReceiveAndCloseConnection()
+
+		if err != nil {
+			log.Errorf("action: receive_response | result: fail | client_id: %v | error: %v",
+				c.config.ID,
+				err,
+			)
+			return
+		} else {
+			log.Infof("action: receive_response | result: success | message: %v", msg.msg)
+		}
+
+		log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
+			clientMessage.document,
+			clientMessage.number,
 		)
 
 		// Wait a time between sending one message and the next one
@@ -93,21 +106,20 @@ func (c *Client) StartClientLoop() {
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
 
-
 func handleSignals(sigs chan os.Signal, client *Client) {
-    sig := <-sigs
+	sig := <-sigs
 	log.Infof("action: client_closed | result: in_progress | client_id: %v | signal: %v", client.config.ID, sig)
-	if (client.conn != nil) {
-		client.conn.Close()
+	if client.conn != nil {
+		client.conn.CloseConnection()
 	}
-    log.Infof("action: client_closed | result: success")
+	log.Infof("action: client_closed | result: success")
 	os.Exit(0)
 }
 
 func setupSignalHandler(client *Client) {
-    sigs := make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 1)
 
-    signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
 
-    go handleSignals(sigs, client)
+	go handleSignals(sigs, client)
 }

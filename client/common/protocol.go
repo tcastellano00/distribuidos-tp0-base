@@ -1,4 +1,4 @@
-package communication
+package common
 
 import (
 	"net"
@@ -27,6 +27,10 @@ func CreateConnection(serverAddress string) (*Protocol, error) {
 	return protocol, nil
 }
 
+func (prot *Protocol) CloseConnection() error {
+	return prot.socket.Close()
+}
+
 func (prot *Protocol) Send(message ClientMessage) error {
 	data := []byte(message.Serialize())
 
@@ -44,7 +48,8 @@ func (prot *Protocol) Send(message ClientMessage) error {
 	return nil
 }
 
-func (prot *Protocol) Receive() (*ServerMessage, error) {
+func (prot *Protocol) ReceiveAndCloseConnection() (*ServerMessage, error) {
+	defer prot.socket.Close()
 	buffer := make([]byte, RECEIVE_SIZE_BYTES)
 	var message strings.Builder
 
