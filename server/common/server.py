@@ -18,10 +18,10 @@ class Server:
         signal.signal(signal.SIGTERM, self.stop)
 
     def stop(self, signum, frame):
-        logging.info("action: graceful_shutdown | result: in_progress")
+        logging.info("action: server_stop | result: in_progress")
         self._server_is_running = False
         self._server_socket.close()
-        logging.info("action: graceful_shutdown | result: success")
+        logging.info("action: server_stop | result: success")
 
 
     def run(self):
