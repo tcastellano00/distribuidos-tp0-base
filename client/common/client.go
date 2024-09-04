@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net"
 	"time"
-
 	"github.com/op/go-logging"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 var log = logging.MustGetLogger("log")
@@ -31,6 +33,9 @@ func NewClient(config ClientConfig) *Client {
 	client := &Client{
 		config: config,
 	}
+
+	setupSignalHandler(client)
+
 	return client
 }
 
@@ -86,4 +91,23 @@ func (c *Client) StartClientLoop() {
 
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+}
+
+
+func handleSignals(sigs chan os.Signal, client *Client) {
+    sig := <-sigs
+	log.Infof("action: client_closed | result: in_progress | client_id: %v | signal: %v", client.config.ID, sig)
+	if (client.conn != nil) {
+		client.conn.Close()
+	}
+    log.Infof("action: client_closed | result: success")
+	os.Exit(0)
+}
+
+func setupSignalHandler(client *Client) {
+    sigs := make(chan os.Signal, 1)
+
+    signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
+
+    go handleSignals(sigs, client)
 }
