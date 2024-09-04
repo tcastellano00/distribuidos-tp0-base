@@ -3,6 +3,10 @@ import logging
 
 import signal
 
+from common.utils import Bet
+from common.utils import store_bets
+from .protocol import Protocol
+
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
@@ -47,13 +51,21 @@ class Server:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
+
+        protocol = Protocol(client_sock)
+
         try:
-            # TODO: Modify the receive to avoid short-reads
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
+            client_msg = protocol.receive()
             addr = client_sock.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # TODO: Modify the send to avoid short-writes
-            client_sock.send("{}\n".format(msg).encode('utf-8'))
+
+            bet_info = client_msg.split("|")
+
+            bet = Bet(bet_info[0], bet_info[1], bet_info[2], bet_info[3], bet_info[4], bet_info[5])
+            store_bets([bet])
+
+            logging.info(f'action: apuesta_almacenada | result: success | dni: {bet_info[3]} | numero: {bet_info[5]}')
+
+            protocol.send(True, "message received")
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
