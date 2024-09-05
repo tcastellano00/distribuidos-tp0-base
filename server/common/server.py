@@ -36,8 +36,9 @@ class Server:
             while self._server_is_running:
                 client_sock = self.__accept_new_connection()
                 self.__handle_client_connection(client_sock)
-        except OSError: 
-            logging.error("action: server_run | result: stopped")
+        except OSError:
+            if self._server_is_running:
+                raise
 
 
     def __handle_client_connection(self, client_sock):
