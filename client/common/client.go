@@ -58,7 +58,6 @@ func (c *Client) createClientSocket() error {
 
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
-
 	clientMessages, err := GetClienteMessagesFromZip("/data/dataset.zip", c.config.ID)
 
 	if err != nil {
@@ -69,6 +68,7 @@ func (c *Client) StartClientLoop() {
 		return
 	}
 
+	c.createClientSocket()
 	blockSize := c.config.BatchMaxAmount
 	for i := 0; i < len(clientMessages); i += blockSize {
 		// Determina el índice final para el bloque actual
@@ -88,16 +88,16 @@ func (c *Client) StartClientLoop() {
 
 	//Me quedo esperando y reitentando hasta que me avisne que termino el sorteo
 	c.waitForWinners()
+
+	c.conn.CloseConnection()
 }
 
 func (c *Client) waitForWinners() {
 	for {
-		c.createClientSocket()
 		err := c.conn.AskForResults(c.config.ID)
 
 		if err != nil {
 			log.Infof("action: pregunto_resultados | result: fail")
-			time.Sleep(6 * time.Second)
 			continue
 		}
 
@@ -107,7 +107,6 @@ func (c *Client) waitForWinners() {
 
 		if err != nil {
 			log.Infof("action: respuesta_resultados | result: fail")
-			time.Sleep(6 * time.Second)
 			continue
 		}
 
@@ -117,8 +116,6 @@ func (c *Client) waitForWinners() {
 }
 
 func (c *Client) sendBetReady() {
-	c.createClientSocket()
-
 	err := c.conn.BetReady(c.config.ID)
 	if err != nil {
 		log.Infof("action: apuestas_enviadas | result: success")
@@ -136,8 +133,6 @@ func (c *Client) sendBetReady() {
 }
 
 func (c *Client) sendMessages(clientMessage []*ClientMessage) {
-	c.createClientSocket()
-
 	err := c.conn.SendBetList(clientMessage)
 
 	if err != nil {

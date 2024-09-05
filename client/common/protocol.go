@@ -126,7 +126,6 @@ func (prot *Protocol) sendAll(data []byte) error {
 }
 
 func (prot *Protocol) ReceiveAndCloseConnection() (*ServerMessage, error) {
-	defer prot.socket.Close()
 	buffer := make([]byte, RECEIVE_SIZE_BYTES)
 	var message strings.Builder
 
