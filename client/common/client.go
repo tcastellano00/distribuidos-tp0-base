@@ -82,20 +82,37 @@ func (c *Client) StartClientLoop() {
 
 		c.sendMessages(block)
 	}
+
+	//Avisamos que terminamos de cargar las apuestas
+	err = c.conn.BetReady(c.config.ID)
+	if err != nil {
+		log.Infof("action: apuestas_enviadas | result: success")
+	}
+
+	//Me quedo esperando y reitentando hasta que me avisne que termino el sorteo
+	for {
+		err := c.conn.AskForResults(c.config.ID)
+		if err != nil {
+			log.Infof("action: pregunto_resultados | result: fail")
+			time.Sleep(3 * time.Second)
+		} else {
+			log.Infof("action: pregunto_resultados | result: success")
+
+			server_msg, err := c.conn.ReceiveAndCloseConnection()
+
+			if err == nil {
+				log.Infof(server_msg.msg)
+				break
+			}
+		}
+	}
+
 }
 
 func (c *Client) sendMessages(clientMessage []*ClientMessage) {
-
-	// There is an autoincremental msgID to identify every message sent
-	// Messages if the message amount threshold has not been surpassed
-	// for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
-
-	// }
-
-	// Create the connection the server in every loop iteration. Send an
 	c.createClientSocket()
 
-	err := c.conn.SendList(clientMessage)
+	err := c.conn.SendBetList(clientMessage)
 
 	if err != nil {
 		log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v",

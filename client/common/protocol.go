@@ -34,8 +34,11 @@ func (prot *Protocol) CloseConnection() error {
 	return prot.socket.Close()
 }
 
-func (prot *Protocol) SendList(messages []*ClientMessage) error {
+func (prot *Protocol) SendBetList(messages []*ClientMessage) error {
 	var buffer bytes.Buffer
+
+	//Message type
+	buffer.Write([]byte("bet\n"))
 
 	//Serializo todos los mensajes
 	for _, message := range messages {
@@ -72,9 +75,35 @@ func (prot *Protocol) SendList(messages []*ClientMessage) error {
 	return nil
 }
 
-func (prot *Protocol) Send(message ClientMessage) error {
+func (prot *Protocol) SendBet(message ClientMessage) error {
 	var buffer bytes.Buffer
+	//Message type
+	buffer.Write([]byte("bet\n"))
 	buffer.Write([]byte(message.Serialize()))
+	buffer.Write([]byte("\n\n"))
+
+	payload := buffer.Bytes()
+
+	return prot.sendAll(payload)
+}
+
+func (prot *Protocol) BetReady(clientId string) error {
+	var buffer bytes.Buffer
+	//Message type
+	buffer.Write([]byte("ready\n"))
+	buffer.Write([]byte(clientId + "\n"))
+	buffer.Write([]byte("\n\n"))
+
+	payload := buffer.Bytes()
+
+	return prot.sendAll(payload)
+}
+
+func (prot *Protocol) AskForResults(clientId string) error {
+	var buffer bytes.Buffer
+	//Message type
+	buffer.Write([]byte("results\n"))
+	buffer.Write([]byte(clientId + "\n"))
 	buffer.Write([]byte("\n\n"))
 
 	payload := buffer.Bytes()
