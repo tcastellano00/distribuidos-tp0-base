@@ -3,15 +3,13 @@
 ## Links de entregas
 
 [_ej1_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d35fe947df183b02297281b723a7dfe86697ab9b)
-[_ej2_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d4a60239c0d1e96b9f3d36d08d1b710d1db25fbcb)
-[_ej3_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d5d1923fd0d8207fad2d6e70632d0a860e6c6d85f)
-[_ej4_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d94fa140c5908c140b1946da6e498ac318f2102aa)
-[_ej5_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/dd0d4624bf670c16ae3040433dd4ab316f4309684)
-[_ej6_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d49fcb876b224daa2661fb9d3271e3d0d0ad51948)
-[_ej7_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/dd81f867b8788923487193321871ea8b8185c5384)
-[_ej8_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d85cbaf31b504a0503e9ddbd47c7c3419d49ca94e)
-[_master_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d6406630804917b9dfb992c184692a75d8904bd8d)
-
+[_ej2_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/4a60239c0d1e96b9f3d36d08d1b710d1db25fbcb)
+[_ej3_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/5d1923fd0d8207fad2d6e70632d0a860e6c6d85f)
+[_ej4_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/94fa140c5908c140b1946da6e498ac318f2102aa)
+[_ej5_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d0d4624bf670c16ae3040433dd4ab316f4309684)
+[_ej6_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/49fcb876b224daa2661fb9d3271e3d0d0ad51948)
+[_ej7_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d81f867b8788923487193321871ea8b8185c5384)
+[_ej8_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/85cbaf31b504a0503e9ddbd47c7c3419d49ca94e)
 
 En el presente repositorio se provee un ejemplo de cliente-servidor el cual corre en containers con la ayuda de [docker-compose](https://docs.docker.com/compose/). El mismo es un ejemplo práctico brindado por la cátedra para que los alumnos tengan un esqueleto básico de cómo armar un proyecto de cero en donde todas las dependencias del mismo se encuentren encapsuladas en containers. El cliente (Golang) y el servidor (Python) fueron desarrollados en diferentes lenguajes simplemente para mostrar cómo dos lenguajes de programación pueden convivir en el mismo proyecto con la ayuda de containers.
 
