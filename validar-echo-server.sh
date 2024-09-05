@@ -1,13 +1,12 @@
 
 MESSAGE="test" 
 SERVER_CONTAINER_NAME="server"
+SERVER_CONTAINER_PORT=12345
+NETWORK_NAME="tp0_testing_net"
 
-CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$SERVER_CONTAINER_NAME")
-CONTAINER_PORT=12345
+RESPONSE=$(docker run --rm --network "$NETWORK_NAME" busybox:latest sh -c "echo $MESSAGE | nc -w 1 $SERVER_CONTAINER_NAME $SERVER_CONTAINER_PORT")
 
-RESPONSE=$(echo "$MESSAGE" | nc $CONTAINER_IP $CONTAINER_PORT)
-
-if [ "$RESPONSE" = "$MESSAGE" ];then
+if [ "$RESPONSE" = "$MESSAGE" ]; then
     echo "action: test_echo_server | result: success"
 else
     echo "action: test_echo_server | result: fail"
