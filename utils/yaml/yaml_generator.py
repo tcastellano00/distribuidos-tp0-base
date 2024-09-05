@@ -8,7 +8,6 @@ def get_client_container_definition(client_id):
     entrypoint: /client
     environment:
         - CLI_ID={client_id}
-        - CLI_LOG_LEVEL=DEBUG
     networks:
         - testing_net
     depends_on:
