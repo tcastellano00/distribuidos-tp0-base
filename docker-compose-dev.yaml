@@ -7,6 +7,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=DEBUG
+      - TOTAL_CLIENTS=2
     networks:
       - testing_net
     volumes:
@@ -32,34 +33,6 @@ services:
     entrypoint: /client
     environment:
         - CLI_ID=2
-        - CLI_LOG_LEVEL=DEBUG
-    networks:
-        - testing_net
-    depends_on:
-        - server
-    volumes:
-        - ./client/config.yaml:/config.yaml
-
-  client3:
-    container_name: client3
-    image: client:latest
-    entrypoint: /client
-    environment:
-        - CLI_ID=3
-        - CLI_LOG_LEVEL=DEBUG
-    networks:
-        - testing_net
-    depends_on:
-        - server
-    volumes:
-        - ./client/config.yaml:/config.yaml
-
-  client4:
-    container_name: client4
-    image: client:latest
-    entrypoint: /client
-    environment:
-        - CLI_ID=4
         - CLI_LOG_LEVEL=DEBUG
     networks:
         - testing_net
