@@ -3,18 +3,19 @@ import logging
 
 import signal
 
-from common.utils import Bet
-from common.utils import store_bets
+from common.utils import *
+from common.message import *
 from .protocol import Protocol
-from .message import ClientMessageParser
 
 class Server:
-    def __init__(self, port, listen_backlog):
+    def __init__(self, port, listen_backlog, total_clients):
         # Initialize server socket
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._server_is_running = True
+        self._total_clients = total_clients
+        self._finished_clients_id = []
 
         # Initialize signals
         self.initialize_signals()
@@ -57,20 +58,42 @@ class Server:
 
         try:
             client_msg = protocol.receive()
-            addr = client_sock.getpeername()
+            client_msg_parser = ClientMessageParser(client_msg)
 
-            parser = ClientMessageParser(client_msg)
-            bets = parser.get_bets()
+            if client_msg_parser.get_type() == CLIENT_MESSAGE_TYPE_BET:
+                bets = client_msg_parser.get_bets()
+                store_bets(bets)
+                logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)} | peso_kb: {len(client_msg) / 1024}')
+                protocol.send(True, "action: receive_message | result: success")
 
-            store_bets(bets)
+            elif client_msg_parser.get_type() == CLIENT_MESSAGE_TYPE_READY:
+                client_id = client_msg_parser.get_client_id()
+                self._finished_clients_id.append(client_id)
+                logging.info(f'action: ready_recibido | result: success | client_id: {client_id}')
 
-            logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)} | peso_kb: {len(client_msg) / 1024}')
+                if (len(self._finished_clients_id) == self._total_clients):
+                    logging.info(f'action: sorteo | result: success')
 
-            protocol.send(True, "message received")
+                protocol.send(True, "action: receive_message | result: success")
+
+            else:
+                client_id = client_msg_parser.get_client_id()
+
+                if (len(self._finished_clients_id) != self._total_clients):
+                    client_sock.close()
+                    return
+
+                bets = load_bets()
+                agency_bets_count = sum(1 for bet in bets if bet.agency == client_id and has_won(bet))
+
+                protocol.send(True, "action: consulta_ganadores | result: success | cant_ganadores: {agency_bets_count}")
+            
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
             client_sock.close()
+
+        
 
     def __accept_new_connection(self):
         """
