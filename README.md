@@ -155,6 +155,52 @@ Las funciones `load_bets(...)` y `has_won(...)` son provistas por la cátedra y 
 
 
 
+### Resolucion y Explicacion de Protocolo:
+Utilice un procolo de texto, donde cada campo del mensaje esta delimitado por una secuencia de caracteres especiales, cualquier mensaje del cliente tiene la estructura general de:
+`<message-type>\n<payload>\n\n` donde `<message-type>` puede tomar los valores **bet**, **ready**, **results**, el contenido de `<payload>` va a depender del `<message-type>`.
+
+Si `<message-type>` es de tipo **bet**, entonces el payload estara formado por un conjunto de apuestas, cada apuesta se serializa de la siguiente forma
+`agencyId|firstName|lastName|document|birthDate|number\n`, por ejemplo el mensaje que envia el cliente de la agencia 1 con dos apuestas tendria la siguiente forma
+
+```
+bet\n
+1|Tomas|Castellano|40770898|13-04-1998|5000\n
+1|Ines|Castellano|40770897|14-04-2000|4500\n
+\n\n
+```
+
+Si `<message-type>` es de tipo **ready** o **results**, entonces el payload estara formado por el id de la agencia, por ejemplo para indicar que todas las apuestas de la agencia fueron
+enviadas:
+```
+ready\n
+1\n
+\n\n
+
+```
+Para preguntas por los resultados finales del sorteo:
+```
+results\n
+1\n
+\n\n
+```
+En todos los casos al final del mensaje estan los caracteres `\n\n` que indican el fin del mensaje, que fue lo que me ayudo a evitar short-reads o short-writes en caso de algun problema en la red.
+
+Por otro lado, el servidor envia mensajes con la forma `<status>,<text>\n` donde `<status>` indica si la operacion fue realizada correctamente y `<text>` es utilizado para enviarle algun tipo de 
+mensaje al cliente.
+
+A medida que va guardando los batchs de informacion, les responde:
+```
+OK,action: receive_message | result: success\n
+
+```
+Luego, cuando todas las agencias enviaron sus apuestas y comienzan a preguntar por resultados, el servidor les responde una por una con el siguiente mensaje:
+
+```
+OK,action: consulta_ganadores | result: success | cant_ganadores: ${CANT}\n
+```
+Indicandole que en su agencia ganaron "CANT" apuestas
+
+
 ## Parte 3: Repaso de Concurrencia
 
 ### Ejercicio N°8:
@@ -163,6 +209,12 @@ En este ejercicio es importante considerar los mecanismos de sincronización a u
 
 En caso de que el alumno implemente el servidor Python utilizando _multithreading_,  deberán tenerse en cuenta las [limitaciones propias del lenguaje](https://wiki.python.org/moin/GlobalInterpreterLock).
 
+### Resolucion y Explicacion de Mecanismos de Sincronización:
+Para que el servidor pueda atender varios clientes en paralelo, utilice la libreria de python de multiprocessing para que cada cliente este en un proceso separado y asi evitar utilizar multithreading.
+Los mecanismos de sincronizacion que tuve que utilizar son `lock` y `barrier` el primero me permite cuidar la seccion critica que en este caso es el archivo que se va generando en el servidor con todas
+las apuestas, solo un proceso por vez puede acceder a esa seccion critica. Luego la barrera me permitio sincronizar los clientes para que esperaran el resultado final del sorteo, la idea es que
+el clienteA se quede esperando a que el servidor le comunique el ganador de la loteria, para ello el procesoA (correspondiente al clienteA en el servidor) debe esperar a que todos clientes terminen de enviar sus apuestas, recien
+ahi es cuando la barrera deja continuar a los procesos y asi el servidor envia los resultados a cada uno.
 
 
 ## Consideraciones Generales
