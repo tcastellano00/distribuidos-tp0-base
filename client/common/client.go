@@ -84,29 +84,55 @@ func (c *Client) StartClientLoop() {
 	}
 
 	//Avisamos que terminamos de cargar las apuestas
-	err = c.conn.BetReady(c.config.ID)
+	c.sendBetReady()
+
+	//Me quedo esperando y reitentando hasta que me avisne que termino el sorteo
+	c.waitForWinners()
+}
+
+func (c *Client) waitForWinners() {
+	for {
+		c.createClientSocket()
+		err := c.conn.AskForResults(c.config.ID)
+
+		if err != nil {
+			log.Infof("action: pregunto_resultados | result: fail")
+			time.Sleep(6 * time.Second)
+			continue
+		}
+
+		log.Infof("action: pregunto_resultados | result: success")
+
+		server_msg, err := c.conn.ReceiveAndCloseConnection()
+
+		if err != nil {
+			log.Infof("action: respuesta_resultados | result: fail")
+			time.Sleep(6 * time.Second)
+			continue
+		}
+
+		log.Infof(server_msg.msg)
+		break
+	}
+}
+
+func (c *Client) sendBetReady() {
+	c.createClientSocket()
+
+	err := c.conn.BetReady(c.config.ID)
 	if err != nil {
 		log.Infof("action: apuestas_enviadas | result: success")
 	}
 
-	//Me quedo esperando y reitentando hasta que me avisne que termino el sorteo
-	for {
-		err := c.conn.AskForResults(c.config.ID)
-		if err != nil {
-			log.Infof("action: pregunto_resultados | result: fail")
-			time.Sleep(3 * time.Second)
-		} else {
-			log.Infof("action: pregunto_resultados | result: success")
+	_, err = c.conn.ReceiveAndCloseConnection()
 
-			server_msg, err := c.conn.ReceiveAndCloseConnection()
-
-			if err == nil {
-				log.Infof(server_msg.msg)
-				break
-			}
-		}
+	if err != nil {
+		log.Errorf("action: apuestas_enviadas | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
 	}
-
 }
 
 func (c *Client) sendMessages(clientMessage []*ClientMessage) {

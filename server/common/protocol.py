@@ -20,7 +20,7 @@ class Protocol:
                 return buffer[:buffer.index(b'\n\n')].strip().decode('utf-8')
 
     def send(self, success, text):
-        message = ("OK" if success else "Error") + "|" + text + "\n"
+        message = ("OK" if success else "Error") + "," + text + "\n"
         data = message.encode('utf-8')
 
         sent_bytes = 0

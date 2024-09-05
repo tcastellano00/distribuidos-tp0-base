@@ -58,7 +58,7 @@ func (msg *ClientMessage) Serialize() string {
 }
 
 func DeserializeServerMessage(serverMessage string) *ServerMessage {
-	messageParts := strings.Split(strings.TrimSpace(serverMessage), "|")
+	messageParts := strings.Split(strings.TrimSpace(serverMessage), ",")
 
 	return CreateServerMessage(
 		messageParts[0] == "OK",

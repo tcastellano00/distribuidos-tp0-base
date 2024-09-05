@@ -2,7 +2,6 @@ package common
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"strings"
 )
@@ -114,8 +113,6 @@ func (prot *Protocol) AskForResults(clientId string) error {
 func (prot *Protocol) sendAll(data []byte) error {
 	sentBytes := 0
 	totalBytesToSend := len(data)
-
-	fmt.Printf("Enviando fragmento de %d bytes\n", totalBytesToSend)
 
 	for sentBytes < totalBytesToSend {
 		bytes, err := prot.socket.Write(data[sentBytes:])

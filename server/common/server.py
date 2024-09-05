@@ -14,7 +14,7 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._server_is_running = True
-        self._total_clients = total_clients
+        self._total_clients = int(total_clients)
         self._finished_clients_id = []
 
         # Initialize signals
@@ -65,13 +65,13 @@ class Server:
                 store_bets(bets)
                 logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)} | peso_kb: {len(client_msg) / 1024}')
                 protocol.send(True, "action: receive_message | result: success")
-
+            
             elif client_msg_parser.get_type() == CLIENT_MESSAGE_TYPE_READY:
                 client_id = client_msg_parser.get_client_id()
                 self._finished_clients_id.append(client_id)
                 logging.info(f'action: ready_recibido | result: success | client_id: {client_id}')
 
-                if (len(self._finished_clients_id) == self._total_clients):
+                if len(self._finished_clients_id) == self._total_clients:
                     logging.info(f'action: sorteo | result: success')
 
                 protocol.send(True, "action: receive_message | result: success")
@@ -79,14 +79,17 @@ class Server:
             else:
                 client_id = client_msg_parser.get_client_id()
 
-                if (len(self._finished_clients_id) != self._total_clients):
+                if len(self._finished_clients_id) != self._total_clients:
                     client_sock.close()
                     return
 
                 bets = load_bets()
-                agency_bets_count = sum(1 for bet in bets if bet.agency == client_id and has_won(bet))
+                agency_bets_count = sum(1 for bet in bets if bet.agency == int(client_id) and has_won(bet))
 
-                protocol.send(True, "action: consulta_ganadores | result: success | cant_ganadores: {agency_bets_count}")
+                if agency_bets_count == None:
+                    agency_bets_count = 0
+
+                protocol.send(True, f"action: consulta_ganadores | result: success | cant_ganadores: {agency_bets_count}")
             
         except OSError as e:
             logging.error("action: receive_message | result: fail | error: {e}")
