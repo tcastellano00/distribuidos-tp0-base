@@ -16,8 +16,8 @@ class Protocol:
 
             buffer += data
 
-            if b'\n' in buffer:
-                return buffer[:buffer.index(b'\n')].strip().decode('utf-8')
+            if b'\n\n' in buffer:
+                return buffer[:buffer.index(b'\n\n')].strip().decode('utf-8')
 
     def send(self, success, text):
         message = ("OK" if success else "Error") + "|" + text + "\n"

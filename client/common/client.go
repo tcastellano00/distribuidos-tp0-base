@@ -13,10 +13,11 @@ var log = logging.MustGetLogger("log")
 
 // ClientConfig Configuration used by the client
 type ClientConfig struct {
-	ID            string
-	ServerAddress string
-	LoopAmount    int
-	LoopPeriod    time.Duration
+	ID             string
+	ServerAddress  string
+	LoopAmount     int
+	LoopPeriod     time.Duration
+	BatchMaxAmount int
 }
 
 // Client Entity that encapsulates how
@@ -57,52 +58,68 @@ func (c *Client) createClientSocket() error {
 
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
+
+	clientMessages, err := GetClienteMessagesFromZip("/data/dataset.zip", c.config.ID)
+
+	if err != nil {
+		log.Errorf("action: error_file | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	}
+
+	blockSize := c.config.BatchMaxAmount
+	for i := 0; i < len(clientMessages); i += blockSize {
+		// Determina el índice final para el bloque actual
+		endIndex := i + blockSize
+		if endIndex > len(clientMessages) {
+			endIndex = len(clientMessages)
+		}
+
+		// Obtiene el bloque de registros
+		block := clientMessages[i:endIndex]
+
+		c.sendMessages(block)
+	}
+}
+
+func (c *Client) sendMessages(clientMessage []*ClientMessage) {
+
 	// There is an autoincremental msgID to identify every message sent
 	// Messages if the message amount threshold has not been surpassed
-	for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
-		// Create the connection the server in every loop iteration. Send an
-		c.createClientSocket()
+	// for msgID := 1; msgID <= c.config.LoopAmount; msgID++ {
 
-		clientMessage := CreateClientMessage(
+	// }
+
+	// Create the connection the server in every loop iteration. Send an
+	c.createClientSocket()
+
+	err := c.conn.SendList(clientMessage)
+
+	if err != nil {
+		log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v",
 			c.config.ID,
-			os.Getenv("NOMBRE"),
-			os.Getenv("APELLIDO"),
-			os.Getenv("DOCUMENTO"),
-			os.Getenv("NACIMIENTO"),
-			os.Getenv("NUMERO"),
+			err,
 		)
-
-		err := c.conn.Send(*clientMessage)
-
-		if err != nil {
-			log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		}
-
-		msg, err := c.conn.ReceiveAndCloseConnection()
-
-		if err != nil {
-			log.Errorf("action: receive_response | result: fail | client_id: %v | error: %v",
-				c.config.ID,
-				err,
-			)
-			return
-		} else {
-			log.Infof("action: receive_response | result: success | message: %v", msg.msg)
-		}
-
-		log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
-			clientMessage.document,
-			clientMessage.number,
-		)
-
-		// Wait a time between sending one message and the next one
-		time.Sleep(c.config.LoopPeriod)
-
+		return
 	}
+
+	msg, err := c.conn.ReceiveAndCloseConnection()
+
+	if err != nil {
+		log.Errorf("action: receive_response | result: fail | client_id: %v | error: %v",
+			c.config.ID,
+			err,
+		)
+		return
+	} else {
+		log.Infof("action: receive_response | result: success | message: %v", msg.msg)
+	}
+
+	// Wait a time between sending one message and the next one
+	time.Sleep(c.config.LoopPeriod)
+
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
 }
 

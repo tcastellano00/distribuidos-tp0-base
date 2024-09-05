@@ -6,6 +6,7 @@ import signal
 from common.utils import Bet
 from common.utils import store_bets
 from .protocol import Protocol
+from .message import ClientMessageParser
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -58,12 +59,12 @@ class Server:
             client_msg = protocol.receive()
             addr = client_sock.getpeername()
 
-            bet_info = client_msg.split("|")
+            parser = ClientMessageParser(client_msg)
+            bets = parser.get_bets()
 
-            bet = Bet(bet_info[0], bet_info[1], bet_info[2], bet_info[3], bet_info[4], bet_info[5])
-            store_bets([bet])
+            store_bets(bets)
 
-            logging.info(f'action: apuesta_almacenada | result: success | dni: {bet_info[3]} | numero: {bet_info[5]}')
+            logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)} | peso_kb: {len(client_msg) / 1024}')
 
             protocol.send(True, "message received")
         except OSError as e:
