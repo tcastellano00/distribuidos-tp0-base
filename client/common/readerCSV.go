@@ -2,17 +2,16 @@ package common
 
 import (
 	"archive/zip"
-	"encoding/csv"
 	"fmt"
+	"io"
 )
 
-func extractCSVFromZip(zipFilePath string, agencyID string) ([][]string, error) {
+func GetReaderCSVFromZip(zipFilePath string, agencyID string) (io.ReadCloser, *zip.ReadCloser, error) {
 	// Abre el archivo ZIP
 	r, err := zip.OpenReader(zipFilePath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	defer r.Close()
 
 	// Construye el nombre del archivo CSV esperado
 	csvFileName := fmt.Sprintf("agency-%s.csv", agencyID)
@@ -27,26 +26,20 @@ func extractCSVFromZip(zipFilePath string, agencyID string) ([][]string, error) 
 	}
 
 	if csvFile == nil {
-		return nil, fmt.Errorf("archivo %s no encontrado en el ZIP", csvFileName)
+		return nil, nil, fmt.Errorf("archivo %s no encontrado en el ZIP", csvFileName)
 	}
 
 	// Lee el contenido del archivo CSV
 	f, err := csvFile.Open()
 	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	// Lee los registros CSV
-	reader := csv.NewReader(f)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return records, nil
+	return f, r, nil
+
 }
 
+/*
 func GetClienteMessagesFromZip(zipFilePath string, agencyID string) ([]*ClientMessage, error) {
 	records, err := extractCSVFromZip(zipFilePath, agencyID)
 	if err != nil {
@@ -72,4 +65,4 @@ func GetClienteMessagesFromZip(zipFilePath string, agencyID string) ([]*ClientMe
 	}
 
 	return clientMessages, nil
-}
+} */

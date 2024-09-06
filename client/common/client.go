@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/csv"
 	"os"
 	"os/signal"
 	"syscall"
@@ -58,19 +59,76 @@ func (c *Client) createClientSocket() error {
 
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
-	clientMessages, err := GetClienteMessagesFromZip("/data/dataset.zip", c.config.ID)
+	f, r, err := GetReaderCSVFromZip("/data/dataset.zip", c.config.ID)
 
 	if err != nil {
-		log.Errorf("action: error_file | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
 		return
 	}
 
+	defer r.Close()
+	defer f.Close()
+
+	// Lee los registros CSV
+	reader := csv.NewReader(f)
+
 	c.createClientSocket()
 	blockSize := c.config.BatchMaxAmount
-	for i := 0; i < len(clientMessages); i += blockSize {
+	var clientMessages []*ClientMessage
+	lineCount := 0
+
+	for {
+		record, err := reader.Read()
+
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			log.Infof("action: procesar_archivo | result: fail | client_id: %v | error: %v",
+				c.config.ID,
+				err,
+			)
+			return
+		}
+
+		firstName := record[0]
+		lastName := record[1]
+		document := record[2]
+		birthdate := record[3]
+		number := record[4]
+
+		clientMessage := CreateClientMessage(c.config.ID, firstName, lastName, document, birthdate, number)
+		clientMessages = append(clientMessages, clientMessage)
+		lineCount++
+
+		if lineCount >= blockSize {
+			c.sendMessages(clientMessages)
+
+			clientMessages = []*ClientMessage{}
+			lineCount = 0
+		}
+	}
+
+	if lineCount > 0 {
+		c.sendMessages(clientMessages)
+	}
+	/*
+		for _, record := range records {
+			if len(record) < 5 {
+				return nil, fmt.Errorf("registro CSV inválido: %v", record)
+			}
+
+			firstName := record[0]
+			lastName := record[1]
+			document := record[2]
+			birthdate := record[3]
+			number := record[4]
+
+			clientMessage := CreateClientMessage(agencyID, firstName, lastName, document, birthdate, number)
+			clientMessages = append(clientMessages, clientMessage)
+		}
+	*/
+
+	/*for i := 0; i < len(clientMessages); i += blockSize {
 		// Determina el índice final para el bloque actual
 		endIndex := i + blockSize
 		if endIndex > len(clientMessages) {
@@ -81,7 +139,7 @@ func (c *Client) StartClientLoop() {
 		block := clientMessages[i:endIndex]
 
 		c.sendMessages(block)
-	}
+	} */
 
 	//Avisamos que terminamos de cargar las apuestas
 	c.sendBetReady()
