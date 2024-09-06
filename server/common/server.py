@@ -6,6 +6,7 @@ import multiprocessing
 
 from common.utils import *
 from common.message import *
+from common.exceptions import *
 from .protocol import Protocol
 
 class Server:
@@ -112,6 +113,9 @@ class Server:
                     protocol.send(True, f"action: consulta_ganadores | result: success | cant_ganadores: {agency_bets_count}")
 
                     client_is_running = False
+
+            except ClientClosedException as e:
+                client_is_running = False
                 
             except OSError as e:
                 logging.error("action: receive_message | result: fail | error: {e}")
