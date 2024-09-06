@@ -9,7 +9,7 @@
 [_ej5_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d0d4624bf670c16ae3040433dd4ab316f4309684)
 [_ej6_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/49fcb876b224daa2661fb9d3271e3d0d0ad51948)
 [_ej7_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/d81f867b8788923487193321871ea8b8185c5384)
-[_ej8_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/85cbaf31b504a0503e9ddbd47c7c3419d49ca94e)
+[_ej8_](https://github.com/tcastellano00/distribuidos-tp0-base/commit/643e3a786c1901a5c99afac6083c390723a90f4d)
 
 En el presente repositorio se provee un ejemplo de cliente-servidor el cual corre en containers con la ayuda de [docker-compose](https://docs.docker.com/compose/). El mismo es un ejemplo práctico brindado por la cátedra para que los alumnos tengan un esqueleto básico de cómo armar un proyecto de cero en donde todas las dependencias del mismo se encuentren encapsuladas en containers. El cliente (Golang) y el servidor (Python) fueron desarrollados en diferentes lenguajes simplemente para mostrar cómo dos lenguajes de programación pueden convivir en el mismo proyecto con la ayuda de containers.
 
